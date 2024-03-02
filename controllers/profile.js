@@ -44,7 +44,7 @@ exports.updateProfile = async (req, res) => {
 exports.getUserDetails = async (req, res) => {
     try {
         const userId = req.user.id;
-        const userDetails = await User.findById(userId)
+        const userDetails = await User.findById(userId,{password: 0})
             .populate("additionalDetails")
             .exec();
 
@@ -128,8 +128,14 @@ exports.updateDisplayPicture = async (req, res) => {
 
 
         const userDetails = await User.findById(userId);
+        if (!userDetails) {
+            return res.status(404).json({
+                success: false,
+                message: "User Not Found",
+            });
+        }
 
-        const filePath = `${profileS3Url}/${userDetails.firstName}_${userDetails.lastName}`;
+        const filePath = `${profileS3Url}/${userId}`;
         const fileStream = fs.createReadStream(displayPicture.tempFilePath);
 
         await uploadImageToS3_Type2({

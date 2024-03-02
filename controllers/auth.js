@@ -143,9 +143,12 @@ exports.signUp = async (req, res) => {
       });
     }
 
-    let approved = "";
-    approved === "Instructor" ? (approved = false) : (approved = true);
-
+    if (accountType == 'ADMIN') {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Account Type",
+      });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -165,11 +168,13 @@ exports.signUp = async (req, res) => {
       image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
       additionalDetails: profileDetails._id
     });
-    
+
+    const userPayload = await User.findOne({ _id: user._id }, { password: 0 }).populate("additionalDetails").exec();
+
     return res.status(200).json({
       success: true,
       message: "User is Registered Successfully",
-      user,
+      user: userPayload,
     });
   } catch (error) {
     console.error("Error in signUp:", error);
@@ -200,7 +205,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ email }, { password: 0 })
       .populate("additionalDetails")
       .exec();
 
@@ -308,7 +313,7 @@ exports.changePassword = async (req, res) => {
 
     const passwordPattern =
       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
-      console.log(passwordPattern.test(newPassword));
+    console.log(passwordPattern.test(newPassword));
     if (!passwordPattern.test(newPassword)) {
       return res.status(400).json({
         success: false,

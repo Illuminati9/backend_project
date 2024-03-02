@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
     },
     accountType: {
       type: String,
-      enum: [Admin,User],
+      enum: [Admin, User],
       required: true,
     },
     active: {
@@ -46,13 +46,12 @@ const userSchema = new mongoose.Schema(
       ref: "Profile",
       required: true,
     },
-    
-    // courses: [
-    //   {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "Course",
-    //   },
-    // ],
+    posts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
     image: {
       type: String,
       required: true,
@@ -63,12 +62,6 @@ const userSchema = new mongoose.Schema(
     resetTokenExpires: {
       type: Date,
     },
-    // courseProgress: [
-    //   {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "CourseProgress",
-    //   },
-    // ],
   },
   { timestamps: true }
 );
