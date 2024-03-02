@@ -1,8 +1,10 @@
 const Profile = require("../models/profile");
 const User = require("../models/user");
-// const { uploadMediaToCloudinary } = require("../utils/mediaUploader");
-const upload = require('../config/multerS3');
-const { uploadImageToS3 } = require("../config/s3Server");
+const { getObjectUrl, uploadImageToS3_Type2 } = require("../config/s3Server");
+const { profileS3Url, svgType, jpegType, pngType, jpgType, svgType2, allowedFileTypes } = require("../utils/constants");
+
+const fs = require('fs');
+const mongoose = require('mongoose')
 
 exports.updateProfile = async (req, res) => {
     try {
@@ -98,9 +100,10 @@ exports.deleteAccount = async (req, res) => {
 
 exports.updateDisplayPicture = async (req, res) => {
     try {
-        console.log(req);
-        const displayPicture = req.files.displayPicture;
+        console.log(req.files.file);
+        const displayPicture = req.files.file;
         const userId = req.user.id;
+        console.log(req.user);
 
         if (!displayPicture) {
             return res.status(400).json({
@@ -109,27 +112,46 @@ exports.updateDisplayPicture = async (req, res) => {
             });
         }
 
-        // const updatedImage = await uploadImageToS3({
-        //     fileName: displayPicture[0].key,
-        //     contentType: displayPicture[0].mimetype,
-        //     imageBuffer: displayPicture[0].buffer,
-        // });
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID is required to update the display picture",
+            });
+        }
+
+        if (!allowedFileTypes.includes(displayPicture.mimetype)) {
+            return res.status(400).json({
+                success: false,
+                message: "File Type is not matching and only allows image/svg or image/jpeg or image/png or image/jpg",
+            });
+        }
 
 
-        const updatedImage = await upload(displayPicture[0].buffer, displayPicture[0].originalname, displayPicture[0].mimetype);
+        const userDetails = await User.findById(userId);
 
-        console.log(updatedImage);
+        const filePath = `${profileS3Url}/${userDetails.firstName}_${userDetails.lastName}`;
+        const fileStream = fs.createReadStream(displayPicture.tempFilePath);
 
-        if (!updatedImage) {
+        await uploadImageToS3_Type2({
+            filePath: filePath,
+            contentType: displayPicture.mimetype,
+            body: fileStream,
+        });
+
+        const imageUrl = await getObjectUrl(filePath)
+        console.log(imageUrl)
+
+
+        if (!imageUrl) {
             return res.status(500).json({
                 success: false,
                 message: "Failed to update profile picture",
             });
         }
-
+        
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            { image: updatedImage.secure_url },
+            { image: imageUrl },
             { new: true }
         );
 

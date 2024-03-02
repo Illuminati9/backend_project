@@ -1,7 +1,7 @@
 const { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { profileS3Url } = require('../utils/constants');
 const { Upload } = require('@aws-sdk/lib-storage')
+
 
 const s3Client = new S3Client({
     region: process.env.AWS_S3_REGION,
@@ -9,7 +9,6 @@ const s3Client = new S3Client({
         accessKeyId: process.env.AWS_S3_ACCESS_KEY,
         secretAccessKey: process.env.AWS_S3_SECRET_KEY
     },
-
 })
 
 const getObjectUrl = async (key) => {
@@ -23,11 +22,12 @@ const getObjectUrl = async (key) => {
     return url;
 }
 
-const putObjectUrl = async (fileName, contentType) => {
+const putObjectUrl = async (filePath, contentType,body) => {
     const command = new PutObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: `${profileS3Url}/${fileName}`,
+        Key: filePath,
         ContentType: contentType,
+        Body: body 
     })
 
     const url = await getSignedUrl(s3Client, command);
@@ -45,23 +45,41 @@ const deleteObjectUrl = async (fileName) => {
 }
 
 const uploadImageToS3 = async (imageProps) => {
-    const { fileName, contentType, imageBuffer } = imageProps;
+    const { filePath, contentType, body } = imageProps;
 
     const command = new PutObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: `${profileS3Url}/${fileName}`,
+        Key: filePath,
         ContentType: contentType,
-        Body: imageBuffer
+        Body: body
     });
 
     await s3Client.send(command);
 }
 
 
+const uploadImageToS3_Type2 = async (imageProps) => {
+    const { filePath, contentType, body } = imageProps;
+
+    const upload = new Upload({
+        client: s3Client,
+        params: {
+            Bucket: process.env.AWS_S3_BUCKET_NAME,
+            Key: filePath,
+            ContentType: contentType,
+            Body: body,
+        },
+    });
+    // console.log('hello world',upload);
+
+    await upload.done();
+}
+
 
 module.exports = {
     getObjectUrl,
     putObjectUrl,
     deleteObjectUrl,
-    uploadImageToS3
+    uploadImageToS3,
+    uploadImageToS3_Type2
 }
