@@ -1,18 +1,15 @@
 const mongoose = require('mongoose')
 
-
-const postSchema = new mongoose.Schema({
+const commentSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'User'
     },
-    title: {
-        type: String,
+    postId: {
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
-        trim: true,
-        minlength: 2,
-        maxlength: 50,
+        ref: 'Post'
     },
     content: {
         type: String,
@@ -21,25 +18,16 @@ const postSchema = new mongoose.Schema({
         minlength: 2,
         maxlength: 500,
     },
-    image: [{
-        type: String,
-    }],
-    likes: [
+    likes:[
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
-        }
-    ],
-    comments: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Comment'
         }
     ],
     createdAt: {
         type: Date,
         default: Date.now
     }
-})
+});
 
-module.exports = mongoose.model('Post', postSchema)
+module.exports = mongoose.model('Comment', commentSchema)

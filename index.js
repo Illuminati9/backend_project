@@ -5,13 +5,12 @@ const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
+const helmet = require('helmet')
 
 
 const userRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 const postRoutes = require('./routes/post');
-
-const fileparser = require('./config/parseFile');
 
 require('dotenv').config({ path: '.env' })
 
@@ -21,6 +20,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(helmet());
 app.use(fileUpload({ useTempFiles: true,tempFileDir: 'tmp/',}));
 
 app.set('json spaces', 5);
@@ -28,6 +28,12 @@ app.set('json spaces', 5);
 app.get('/api/v1/', (req, res) => {
   res.status(200).json({
     message: "Welcome to the API"
+  })
+})
+
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: "Hello world"
   })
 })
 

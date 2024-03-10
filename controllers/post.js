@@ -154,7 +154,6 @@ exports.editPost = async (req, res) => {
         post.image = [];
 
         for (let i = 0; i < images.length; i++) {
-            console.log('i\n');
             const filePath = `${postS3Url}/${userId}/${post._id}/${i}`;
             const fileStream = fs.createReadStream(images[i].tempFilePath);
 
@@ -237,6 +236,10 @@ exports.deletePost = async (req, res) => {
             console.log('i\n');
             const filePath = `${postS3Url}/${userId}/${post._id}/${i}`;
             await deleteObjectUrl(filePath);
+        }
+
+        for (let i = 0; i < post.comments.length; i++) {
+            await Comment.deleteOne({ _id: post.comments[i].toString() });
         }
 
         console.log('Photos Deleted successfully')
@@ -331,7 +334,7 @@ exports.getUserPosts = async (req, res) => {
 
         const posts = await Post.find({ userId: userId }).sort({ createdAt: -1 });
 
-        if (posts==undefined) {
+        if (posts == undefined) {
             return res.status(404).json({
                 success: false,
                 message: "Posts not found",
